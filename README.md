@@ -124,22 +124,6 @@ Many of this was taken from https://github.com/styleguide/ruby, https://github.c
       end
     ```
 
-* Put one empty line after `class` or `module` definitions and before the `end`.
-    ```Ruby
-    class MyClass
-
-      # first line goes here
-
-    end
-    ```
-
-* No empty lines after `def` and before the `end` in a method.
-    ```Ruby
-    def foo
-      # first line goes here
-    end
-    ```
-
 * Only one space for multiple line assignments.
     ```Ruby
     # bad
@@ -153,20 +137,31 @@ Many of this was taken from https://github.com/styleguide/ruby, https://github.c
     foobarqux = qux
     ```
 
+* Use `%i` or `%I` for an array of symbols.
+    
+    ```Ruby
+    # bad
+    array = [:foobar1, :foobar2, :foobar3]
+    
+    # good
+    array = %i[foobar1 foobar2 foobar3]
+    ```
+
+
 * Multiple line assignment.
     ```Ruby
     # bad
     hash = { foo1: :bar1, foo2: :bar2, foo3: :bar3, foo4: :bar4, foo5: :bar5 }
-    array = [:foobar1, :foobar2, :foobar3, :foobar4, :foobar5, :foobar6, :foobar7, :foobar8, :foobar9]
+    array = %i[foobar1 foobar2 foobar3 foobar4 foobar5 foobar6 foobar7 foobar8 foobar9]
 
     # good - the preferred way
     hash = {
       foo1: :bar1, foo2: :bar2, foo3: :bar3,
       foo4: :bar4, foo5: :bar5
     }
-    array = [
-      :foobar1, :foobar2, :foobar3, :foobar4, :foobar5,
-      :foobar6, :foobar7, :foobar8, :foobar9
+    array = %i[
+      foobar1 foobar2 foobar3 foobar4 foobar5
+      foobar6 foobar7 foobar8 foobar9
     ]
 
     # good - But not the preferred way. Move the left brace to the next line, if the hash gets unclear.
@@ -176,9 +171,9 @@ Many of this was taken from https://github.com/styleguide/ruby, https://github.c
         foo4: :bar4, foo5: :bar5
       }
     array =
-      [
-        :foobar1, :foobar2, :foobar3, :foobar4, :foobar5,
-        :foobar6, :foobar7, :foobar8, :foobar9
+      %i[
+        foobar1 foobar2 foobar3 foobar4 foobar5
+        foobar6 foobar7 foobar8 foobar9
       ]
     ```
 
@@ -195,51 +190,59 @@ Many of this was taken from https://github.com/styleguide/ruby, https://github.c
       end
     ```
 
-* The `and` and `or` keywords are banned. Always use  `&&`  and `||` instead!
+* The keywords `and` and `or` have lower precedence than assignments in Ruby and therefore often lead to unexpected behavior.
+Always use the operators `&&` and `||` instead.
     ```Ruby
-    # because of:
+    # bad – leads to surprising results
     foo = 'ThisIsNotABoolean'
     bar = false
     result = foo and bar
-    # => 'ThisIsNotABoolean'
-    # but we want this:
+    # => "ThisIsNotABoolean"
+    # What actually happened:
+    # (result = foo) and bar
+    
+    # good - as expected
     result = foo && bar
     # => false
     ```
 
-*  Method defininitions and calls
-    ```Ruby
-    # bad
-    object.method arg
-
-    # good
-    object.method(arg)
-    ```
-
-*  Method defininitions and calls: brackets around parameters are not necessary. If no brackets are used new lines should be indented with 4 spaces.
+* Multiline method calls must have parentheses.
     ```Ruby
     # good
     object.method arg
     object.method(arg)
 
     # bad
-    object.method arg1, arg2, arg3,
-      arg4, arg5, arg6
+    object.method arg1,
+                  arg2,
+                  arg3
 
     # good
-    object.method arg1, arg2, arg3,
-        arg4, arg5, arg6
+    object.method(
+      arg1,
+      arg2,
+      arg3
+    )
     ```
+
+* Each argument in a multi-line method call must start on a separate line.
+    ```Ruby
+    # bad
+    object.method(
+      arg1, arg2,
+      arg3
+    )
+
+    # good
+    object.method(
+      arg1,
+      arg2,
+      arg3
+    )
+    ```
+    
 * Multi-line method chaining: put points at the end of lines and methods on new lines. If using any newlines put every method to a new line
     ```Ruby
-    # bad
-    foo.bar.qux
-      .baz
-
-    # better
-    foo.bar.qux.
-      baz
-
     # ok
     foo.bar.qux.baz
 
@@ -285,20 +288,24 @@ Many of this was taken from https://github.com/styleguide/ruby, https://github.c
     end
 
     # good
-    def foobarqux(text,
-          small_text: nil, text_class: nil,
-          no_text: (text.blank? && small_text.blank?),
-          extra_content: nil,
-          large_button: large_button_default?,
-          icon_position: :left, disabled: false,
-          text_icon_space: (no_button ? '' : ' '),
-          **options)
+    def foobarqux(
+      text,
+      small_text: nil,
+      text_class: nil,
+      no_text: (text.blank? && small_text.blank?),
+      extra_content: nil,
+      large_button: large_button_default?,
+      icon_position: :left,
+      disabled: false,
+      text_icon_space: (no_button ? '' : ' '),
+      **options
+    )
       # ...
     end
     ```
-* Use named parameters for methods with optional parameters (only for projects using Ruby 2.0 or greater)
+* Use named parameters for methods with optional parameters.
   ```Ruby
-  # bad (ok for ruby < 2.0)
+  # bad
   def foo(options = {})
     bar = options.fetch(:bar, 'default')
     puts bar
@@ -321,13 +328,16 @@ Many of this was taken from https://github.com/styleguide/ruby, https://github.c
     end
 
     # good
-    simple_form_for(@object,
+    simple_form_for(
+      @object,
       url: long_route_method_path,
       html: {
-        class: 'form-horizontal', multipart: true,
+        class: 'form-horizontal',
+        multipart: true,
         data: {
-          data: :data, another_data: another_data,
-          some_more_data: some_more_data
+          data: :data,
+          another_data:,
+          some_more_data:
         }
       }
     ) do |f|
@@ -342,9 +352,11 @@ Many of this was taken from https://github.com/styleguide/ruby, https://github.c
                                  :password_confirmation => 'password'))
 
     # good
-    create(:user,
+    create(
+      :user,
       user:
-        build(:user,
+        build(
+          :user,
           email: 'user@webit.de',
           password: 'password',
           password_confirmation: 'password'
@@ -377,30 +389,6 @@ Many of this was taken from https://github.com/styleguide/ruby, https://github.c
         'customer_number' => customer_number
       }
     )
-    ```
-
-* The names of potentially dangerous methods (i.e. methods that modify `self` or the arguments) should end with an exclamation mark if there exists a safe version of that dangerous method.
-    ```Ruby
-    # bad - there is no matching 'safe' method
-    class Person
-      def update!
-      end
-    end
-
-    # good
-    class Person
-      def update
-      end
-    end
-
-    # good
-    class Person
-      def update!
-      end
-
-      def update
-      end
-    end
     ```
 
 * If there are many conditions, use 4 spaces relatively to the beginning of the statement for the next lines
@@ -441,18 +429,12 @@ Many of this was taken from https://github.com/styleguide/ruby, https://github.c
     ```Ruby
     # bad
     hash = { :one => 1, :two => 2, :three => 3 }
+    
+    # bad
+    hash = { 'one': 1, 'two': 2, 'three': 3 }
 
     # good
     hash = { one: 1, two: 2, three: 3 }
-
-    # since ruby 2.2 we can create a hash like this:
-    hash = { 'one': 1, 'two': 2, 'three': 3 }
-    # but keep in mind:
-    hash[:one]
-    => 1
-    hash['one']
-    => nil
-
     ```
 
 * Favor the use of Array#join over the fairly cryptic Array# with a string argument.
@@ -535,18 +517,8 @@ Many of this was taken from https://github.com/styleguide/ruby, https://github.c
     # good
     <input id="foo_bar" />
     ```
-* Use `presence` instead of `present?` if possible
-    ```Ruby
-    # bad
-    state = params[:state] if params[:state].present?
-    country = params[:country] if params[:country].present?
-    region = state || country || 'US'
 
-    # good
-    region = params[:state].presence || params[:country].presence || 'US'
-    ```
-    
-* Use lambdas instead of strings for `assert_difference` and `assert_no_difference` (and `assert_changes`/`assert_no_changes` in Rails 5.1)
+* Use lambdas instead of strings for `assert_difference` and `assert_no_difference`
 
     ```Ruby
       # bad (no code highlight, no inspections etc.)
